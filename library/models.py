@@ -158,7 +158,7 @@ class Book(models.Model):
         verbose_name_plural = "книги"
         ordering = ["author"]
 
-        constraint = [
+        constraints = [
             models.CheckConstraint(
                 condition=models.Q(publication_year__gte=1, publication_year__lte=9999),
                 name="book_publication_year_check",
@@ -222,7 +222,7 @@ class Publication(models.Model):
         verbose_name_plural = "публикации"
         ordering = ["publisher"]
 
-        constraint = [
+        constraints = [
             models.CheckConstraint(
                 condition=models.Q(edition__gte=1, edition__lte=9999),
                 name="publication_edition_check",

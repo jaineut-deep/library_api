@@ -62,7 +62,7 @@ class LendingBook(models.Model):
         verbose_name_plural = "выдача_книг"
         ordering = ["count_renewal"]
 
-        constraint = [
+        constraints = [
             models.CheckConstraint(
                 condition=models.Q(count_renewal__lte=2),
                 name="lendingbook_count_renewal_check",
