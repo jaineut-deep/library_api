@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
 from .validators import (validate_day_existence, validate_day_with_month, validate_month_range, validate_book_amount,
                          validate_birth_year, validate_publication)
@@ -72,11 +73,18 @@ class Author(models.Model):
     def clean(self):
         super().clean()
 
-        astronomical_year = self.to_astronomical_year(self.birth_year)
-        validate_day_existence(self, astronomical_year)
-        validate_day_with_month(self)
-        validate_month_range(self)
-        validate_birth_year(self)
+        try:
+            astronomical_year = self.to_astronomical_year(self.birth_year)
+            validate_day_existence(self, astronomical_year)
+            validate_day_with_month(self)
+            validate_month_range(self)
+            validate_birth_year(self)
+        except ValidationError:
+            return
+        except ValueError:
+            return
+        else:
+            self.birth_year = self.to_astronomical_year(self.birth_year)
 
     def save(self, *args, **kwargs) -> None:
         """
@@ -86,7 +94,6 @@ class Author(models.Model):
         :return: None
         """
 
-        self.birth_year = self.to_astronomical_year(self.birth_year)
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -111,7 +118,7 @@ class Author(models.Model):
             return (self.birth_year - 1) * (-1)
         return self.birth_year
 
-    def to_astronomical_year(self, year: int) -> int:
+    def to_astronomical_year(self, year: int) -> int | None:
         """
         Метод, принимающий
         :param year: int
@@ -122,7 +129,7 @@ class Author(models.Model):
             raise ValueError("Год должен быть положительным")
         if self.is_bc_era:
             return 1 - year
-        else:
+        elif not self.is_bc_era:
             return year
 
 
