@@ -1,9 +1,48 @@
 from django.utils import timezone
 from rest_framework import serializers
 from .models import Author, Book, Publication
+from users.models import LendingBook
+
+
+class BookSerializer(serializers.ModelSerializer):
+    lendings = serializers.SerializerMethodField(many=True, required=False)
+
+    def get_lendings(self, instance):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated and not request.user.is_staff:
+            return LendingBook.objects.filter(member=request.user, publication__book=instance)
+        elif request and request.user.is_authenticated and request.user.is_staff:
+            return LendingBook.objects.filter(publication__book=instance)
+
+    class Meta:
+        model = Book
+        fields = "__all__"
+
+    def validate(self, data):
+        publication_year = data.get("publication_year")
+        amount = data.get("amount")
+        is_bc_era = data.get("is_bc_era")
+
+        if not is_bc_era and not (1 <= publication_year <= timezone.now().year):
+            raise serializers.ValidationError({"publication_year": "Год публикации не может быть отрицательным или в будущем"})
+        elif is_bc_era and not (1 <= publication_year <= 9999):
+            raise serializers.ValidationError(
+                {"publication_year": "Год публикации не может быть отрицательным или выше максимума значений"}
+            )
+
+        if amount < 0:
+            raise serializers.ValidationError({"amount": "Количество книг не может быть отрицательным"})
+
+        return data
 
 
 class AuthorSerializer(serializers.ModelSerializer):
+    book_count = serializers.SerializerMethodField()
+    books = BookSerializer(many=True, required=False)
+
+    def get_book_count(self, instance):
+        return instance.books.count()
+
     class Meta:
         model = Author
         fields = "__all__"
@@ -42,30 +81,9 @@ class AuthorSerializer(serializers.ModelSerializer):
         return data
 
 
-class BookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = "__all__"
-
-    def validate(self, data):
-        publication_year = data.get("publication_year")
-        amount = data.get("amount")
-        is_bc_era = data.get("is_bc_era")
-
-        if not is_bc_era and not (1 <= publication_year <= timezone.now().year):
-            raise serializers.ValidationError({"publication_year": "Год публикации не может быть отрицательным или в будущем"})
-        elif is_bc_era and not (1 <= publication_year <= 9999):
-            raise serializers.ValidationError(
-                {"publication_year": "Год публикации не может быть отрицательным или выше максимума значений"}
-            )
-
-        if amount < 0:
-            raise serializers.ValidationError({"amount": "Количество книг не может быть отрицательным"})
-
-        return data
-
-
 class PublicationSerializer(serializers.ModelSerializer):
+    books = BookSerializer(many=True, required=False)
+
     class Meta:
         model = Publication
         fields = "__all__"
