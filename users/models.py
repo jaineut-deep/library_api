@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator
+# from django.core.validators import MaxValueValidator
 from django.db import models
-from .validators import validate_count_renewal
+# from .validators import validate_count_renewal
+from config.settings import COUNT_RENEWAL
 
 
 class CustomUser(AbstractUser):
@@ -26,6 +27,8 @@ class CustomUser(AbstractUser):
 class LendingBook(models.Model):
     """Класс для представления выдачи книги читателям"""
 
+    RENEWALS = [(key, key.upper()) for key in COUNT_RENEWAL]
+
     publication = models.ForeignKey(
         to="library.Publication",
         on_delete=models.CASCADE,
@@ -48,10 +51,19 @@ class LendingBook(models.Model):
         auto_now=True,
         verbose_name="Дата обновления"
     )
-    count_renewal = models.PositiveIntegerField(
-        validators=[MaxValueValidator(2)],
-        default=0,
+    count_renewal = models.CharField(
+        choices=RENEWALS,
+        blank=False,
+        null=False,
+        default="zero",
         verbose_name="Количество продлений",
+        help_text="Укажите номер продления"
+    )
+    status = models.BooleanField(
+        default=None,
+        blank=True,
+        null=True,
+        verbose_name="Статус"
     )
 
     def __str__(self):
@@ -62,25 +74,4 @@ class LendingBook(models.Model):
         verbose_name_plural = "выдача_книг"
         ordering = ["count_renewal"]
 
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(count_renewal__lte=2),
-                name="lendingbook_count_renewal_check",
-            )
-        ]
 
-    def clean(self):
-        super().clean()
-
-        validate_count_renewal(self)
-
-    def save(self, *args, **kwargs) -> None:
-        """
-        Переопределённый метод save() для сохранения результата после валидации полей модели LandingBook
-        :param args:
-        :param kwargs:
-        :return: None
-        """
-
-        self.full_clean()
-        return super().save(*args, **kwargs)
