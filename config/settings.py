@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
-
+import json
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -208,3 +208,4 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+COUNT_RENEWAL = json.loads(os.getenv("COUNT_RENEWAL"))
