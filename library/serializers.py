@@ -16,7 +16,7 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = "__all__"
+        fields = ["title", "genre", "is_bc_era", "publication_year", "author", "amount", "lendings"]
 
     def validate(self, data):
         publication_year = data.get("publication_year")
@@ -45,7 +45,9 @@ class AuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = "__all__"
+        fields = [
+            "first_name", "surname", "middle_name", "birth_day", "birth_month", "birth_year", "is_bc_era", "books"
+        ]
 
     def validate(self, data):
         birth_day = data.get("birth_day")
@@ -82,11 +84,12 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class PublicationSerializer(serializers.ModelSerializer):
-    books = BookSerializer(many=True, required=False)
+    book = BookSerializer(read_only=True)
 
     class Meta:
         model = Publication
-        fields = "__all__"
+        fields = ["edition", "publisher", "publication_place", "book", "quantity"]
+        read_only_fields = ["book"]
 
     def validate(self, data):
         edition = data.get("edition")
