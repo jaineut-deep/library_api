@@ -1,7 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-# from django.core.validators import MaxValueValidator
 from django.db import models
-# from .validators import validate_count_renewal
 from config.settings import COUNT_RENEWAL
 
 
@@ -69,9 +67,11 @@ class LendingBook(models.Model):
     def __str__(self):
         return f"{self.member} - {self.updated_at.date()}, продлений: {self.count_renewal}"
 
+    @property
+    def get_count_renewal(self):
+        return COUNT_RENEWAL.get(self.count_renewal)
+
     class Meta:
         verbose_name = "выдача_книги"
         verbose_name_plural = "выдача_книг"
         ordering = ["count_renewal"]
-
-
