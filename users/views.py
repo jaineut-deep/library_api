@@ -1,4 +1,5 @@
-from rest_framework import generics
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework import generics, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -41,34 +42,65 @@ class CustomUserDestroyAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsManager]
 
 
-class LendingBookCreateAPIView(generics.CreateAPIView):
-    serializer_class = LendingBookSerializer
-    permission_classes = [IsAuthenticated, IsNotManager]
+@extend_schema_view(
 
-
-class LendingBookListAPIView(generics.ListAPIView):
+    list=extend_schema(
+        summary="Получить список выдач книг",
+        parameters=[...],
+        responses=LendingBookSerializer,
+    ),
+    retrieve=extend_schema(
+        summary="Получить экземпляр выдачи книги",
+    ),
+    update=extend_schema(
+        summary="Изменение существующего объекта выдачи",
+    ),
+    partial_update=extend_schema(
+        summary="Частичное изменение данных о выдаче",
+    ),
+    create=extend_schema(
+        summary="Создание новой выдачи книги",
+    ),
+    destroy=extend_schema(
+        summary="Удаление существующей выдачи",
+    ),
+)
+class LendingBookViewSet(viewsets.ModelViewSet):
     serializer_class = LendingBookSerializer
-    permission_classes = [IsAuthenticated]
+    queryset = LendingBook.objects.all()
     pagination_class = LibraryPaginator
 
+    def get_permissions(self):
+        if self.action == "create":
+            return [IsAuthenticated(), IsNotManager()]
+        elif self.action == "destroy":
+            return [IsAuthenticated(), IsManager()]
+        elif self.action in ("list", "retrieve", "partial_update", "update"):
+            return [IsAuthenticated()]
+
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.action in ("create", "list", "retrieve", "destroy",):
+            return LendingBookSerializer
+        elif self.action in ("partial_update", "update") and self.request.user.is_staff:
+            return LendingBookStaffSerializer
+        elif self.action in ("partial_update", "update") and not self.request.user.is_staff:
+            return LendingBookMemberSerializer
+
+        return super().get_serializer_class()
+
     def get_queryset(self):
         user = self.request.user
 
-        if user.is_staff:
+        if self.action in ("list", "retrieve", "partial_update", "update") and user.is_staff:
             return LendingBook.objects.all().order_by("id")
-        return LendingBook.objects.filter(member=user).order_by("id")
+        elif self.action in ("list", "retrieve", "partial_update", "update") and not user.is_staff:
+            return LendingBook.objects.filter(member=user).order_by("id")
+        elif self.action == "destroy":
+            return LendingBook.objects.all()
 
-
-class LendingBookRetrieveAPIView(generics.RetrieveAPIView):
-    serializer_class = LendingBookSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.is_staff:
-            return LendingBook.objects.all().order_by("id")
-        return LendingBook.objects.filter(member=user).order_by("id")
+        return super().get_queryset()
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -79,23 +111,6 @@ class LendingBookRetrieveAPIView(generics.RetrieveAPIView):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-
-class LendingBookUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = LendingBookMemberSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        if self.request.user.is_staff:
-            return LendingBookStaffSerializer
-        return LendingBookMemberSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.is_staff:
-            return LendingBook.objects.all().order_by("id")
-        return LendingBook.objects.filter(member=user).order_by("id")
-
     def perform_update(self, serializer):
         instance = serializer.instance
         user = self.request.user
@@ -105,9 +120,3 @@ class LendingBookUpdateAPIView(generics.UpdateAPIView):
                 raise PermissionDenied("Недостаточно прав для обновления объекта.")
             serializer.save(status=None)
         serializer.save()
-
-
-class LendingBookDestroyAPIView(generics.DestroyAPIView):
-    serializer_class = LendingBookSerializer
-    permission_classes = [IsAuthenticated, IsManager]
-    queryset = LendingBook.objects.all()
