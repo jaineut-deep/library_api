@@ -43,7 +43,6 @@ class CustomUserDestroyAPIView(generics.DestroyAPIView):
 
 
 @extend_schema_view(
-
     list=extend_schema(
         summary="Получить список выдач книг",
         parameters=[...],
