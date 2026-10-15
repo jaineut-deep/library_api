@@ -31,7 +31,7 @@ class Author(models.Model):
         help_text="Укажите месяц рождения автора",
     )
     birth_year = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(9999)],
+        validators=[MinValueValidator(-9998), MaxValueValidator(9999)],
         verbose_name="Год рождения",
         help_text="Укажите год рождения автора",
     )
@@ -61,7 +61,7 @@ class Author(models.Model):
                 name="author_birth_month_valid_range",
             ),
             models.CheckConstraint(
-                condition=models.Q(birth_year__gte=1, birth_year__lte=9999),
+                condition=models.Q(birth_year__gte=-9998, birth_year__lte=9999),
                 name="author_birth_year_check",
             ),
             models.CheckConstraint(
@@ -73,18 +73,10 @@ class Author(models.Model):
     def clean(self):
         super().clean()
 
-        try:
-            astronomical_year = self.to_astronomical_year(self.birth_year)
-            validate_day_existence(self, astronomical_year)
-            validate_day_with_month(self)
-            validate_month_range(self)
-            validate_birth_year(self)
-        except ValidationError:
-            return
-        except ValueError:
-            return
-        else:
-            self.birth_year = self.to_astronomical_year(self.birth_year)
+        validate_day_existence(self, self.birth_year)
+        validate_day_with_month(self)
+        validate_month_range(self)
+        validate_birth_year(self)
 
     def save(self, *args, **kwargs) -> None:
         """
@@ -114,23 +106,10 @@ class Author(models.Model):
         :return: int
         """
 
-        if self.birth_year < 1:
-            return (self.birth_year - 1) * (-1)
+        if self.birth_year is not None:
+            if self.birth_year < 1 and self.is_bc_era:
+                return (self.birth_year - 1) * (-1)
         return self.birth_year
-
-    def to_astronomical_year(self, year: int) -> int | None:
-        """
-        Метод, принимающий
-        :param year: int
-        :return: int
-        """
-
-        if year < 1:
-            raise ValueError("Год должен быть положительным")
-        if self.is_bc_era:
-            return 1 - year
-        elif not self.is_bc_era:
-            return year
 
 
 class Book(models.Model):
