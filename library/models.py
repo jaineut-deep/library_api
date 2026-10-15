@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.core.exceptions import ValidationError
 
 from .validators import (validate_day_existence, validate_day_with_month, validate_month_range, validate_book_amount,
                          validate_birth_year, validate_publication)
@@ -121,7 +120,7 @@ class Book(models.Model):
         help_text="Отметьте, если книга опубликована впервые до н. э.",
     )
     publication_year = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(9999)],
+        validators=[MinValueValidator(-9998), MaxValueValidator(9999)],
         blank=True,
         null=True,
         verbose_name="Год публикации",
@@ -146,7 +145,7 @@ class Book(models.Model):
 
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(publication_year__gte=1, publication_year__lte=9999),
+                condition=models.Q(publication_year__gte=-9998, publication_year__lte=9999),
                 name="book_publication_year_check",
             ),
             models.CheckConstraint(
@@ -171,6 +170,18 @@ class Book(models.Model):
 
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    @property
+    def year(self) -> int:
+        """
+        Геттер, возвращающий историческое значение года из базы данных
+        :return: int
+        """
+
+        if self.publication_year is not None:
+            if self.publication_year < 1 and self.is_bc_era:
+                return (self.publication_year - 1) * (-1)
+        return self.publication_year
 
 
 class Publication(models.Model):
