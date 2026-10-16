@@ -1,8 +1,10 @@
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
 from library.paginators import LibraryPaginator
 from users.permissions import IsManager
+from .filters import BookFilter
 from .serializers import AuthorSerializer, BookSerializer, PublicationSerializer
 from .models import Author, Book, Publication
 
@@ -95,3 +97,14 @@ class PublicationDestroyAPIView(generics.DestroyAPIView):
     serializer_class = PublicationSerializer
     permission_classes = [IsAuthenticated, IsManager]
     queryset = Publication.objects.all()
+
+
+class BookSearchListView(generics.ListAPIView):
+    queryset = Book.objects.select_related("author").all()
+    serializer_class = BookSerializer
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = BookFilter
+
+    search_fields = ["title", "author__surname"]
+    permission_classes = [IsAuthenticated]
