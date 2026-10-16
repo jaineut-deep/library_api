@@ -105,7 +105,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
 
         if not request.user.is_staff:
-            if instance.member is not request.user:
+            if instance.member_id != request.user.pk:
                 raise PermissionDenied("Недостаточно прав для отображения объекта.")
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
@@ -115,7 +115,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if not user.is_staff:
-            if instance.member is not user:
+            if instance.member_id != user.pk:
                 raise PermissionDenied("Недостаточно прав для обновления объекта.")
             serializer.save(status=None)
         serializer.save()
