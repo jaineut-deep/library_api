@@ -208,4 +208,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-COUNT_RENEWAL = json.loads(os.getenv("COUNT_RENEWAL"))
+DATA_COUNT_RENEWAL = os.getenv("COUNT_RENEWAL")
+if DATA_COUNT_RENEWAL is None:
+    raise ValueError("Нет данных")
+COUNT_RENEWAL = json.loads(DATA_COUNT_RENEWAL)
