@@ -12,7 +12,7 @@ from .views import (
 
 app_name = UsersConfig.name
 router = DefaultRouter()
-router.register(r"lending", LendingBookViewSet, basename="lending")
+router.register(r"lendings", LendingBookViewSet, basename="lending")
 
 
 urlpatterns = [
