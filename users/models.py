@@ -18,7 +18,7 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.email
 
 
@@ -64,12 +64,20 @@ class LendingBook(models.Model):
         verbose_name="Статус"
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.member} - {self.updated_at.date()}, продлений: {self.count_renewal}"
 
     @property
-    def get_count_renewal(self):
-        return COUNT_RENEWAL.get(self.count_renewal)
+    def get_count_renewal(self) -> int:
+        """
+        Геттер, который возвращает значение номера выдачи
+        :return: int
+        """
+
+        count_data = COUNT_RENEWAL.get(self.count_renewal)
+        if not isinstance(count_data, int):
+            raise ValueError("Значение номера продления не передано")
+        return count_data
 
     class Meta:
         verbose_name = "выдача_книги"
