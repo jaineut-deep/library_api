@@ -16,6 +16,7 @@ from .views import (
     PublicationRetrieveAPIView,
     PublicationUpdateAPIView,
     PublicationDestroyAPIView,
+    BookSearchListView,
 )
 
 app_name = LibraryConfig.name
@@ -37,4 +38,5 @@ urlpatterns = [
     path("publication/<int:pk>/", PublicationRetrieveAPIView.as_view(), name="publication_retrieve"),
     path("publication/update/<int:pk>/", PublicationUpdateAPIView.as_view(), name="publication_update"),
     path("publication/delete/<int:pk>/", PublicationDestroyAPIView.as_view(), name="publication_destroy"),
+    path("books/", BookSearchListView.as_view(), name="book_search"),
 ]
