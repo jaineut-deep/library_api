@@ -43,12 +43,11 @@ class LendingBookSerializer(serializers.ModelSerializer):
 
 
 class LendingBookMemberSerializer(serializers.ModelSerializer):
-    status = serializers.BooleanField(allow_null=True, required=False)
 
     class Meta:
         model = LendingBook
         fields = ["count_renewal"]
-        read_only_fields = ["created_at", "updated_at", "status", "member", "publication"]
+        read_only_fields = ["created_at", "updated_at", "member", "publication"]
 
     def validate(self, data):
         count_renewal_choice = data.get("count_renewal")
