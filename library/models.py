@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from typing import Any
 
 from .validators import (validate_day_existence, validate_day_with_month, validate_month_range, validate_book_amount,
                          validate_birth_year, validate_publication)
@@ -40,7 +41,7 @@ class Author(models.Model):
         help_text="Отметьте, если автор до н. э.",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.middle_name:
             return f"{self.first_name} {self.middle_name} {self.surname}"
         return f"{self.first_name} {self.surname}"
@@ -69,7 +70,7 @@ class Author(models.Model):
             )
         ]
 
-    def clean(self):
+    def clean(self) -> None:
         super().clean()
 
         validate_day_existence(self, self.birth_year)
@@ -77,11 +78,11 @@ class Author(models.Model):
         validate_month_range(self)
         validate_birth_year(self)
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         """
         Переопределённый метод save() для сохранения результата после валидации полей модели Author
-        :param args:
-        :param kwargs:
+        :param args: Any
+        :param kwargs: Any
         :return: None
         """
 
@@ -135,7 +136,7 @@ class Book(models.Model):
     )
     amount = models.IntegerField(verbose_name="Всего", help_text="Укажите количество всех экземпляров книги")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.title} - {self.amount}"
 
     class Meta:
@@ -154,17 +155,17 @@ class Book(models.Model):
             ),
         ]
 
-    def clean(self):
+    def clean(self) -> None:
         super().clean()
 
         validate_publication(self)
         validate_book_amount(self)
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         """
         Переопределённый метод save() для сохранения результата после валидации полей модели Book
-        :param args:
-        :param kwargs:
+        :param args: Any
+        :param kwargs: Any
         :return: None
         """
 
@@ -172,7 +173,7 @@ class Book(models.Model):
         return super().save(*args, **kwargs)
 
     @property
-    def year(self) -> int:
+    def year(self) -> int | None:
         """
         Геттер, возвращающий историческое значение года из базы данных
         :return: int
@@ -211,7 +212,7 @@ class Publication(models.Model):
     )
     quantity = models.PositiveIntegerField(verbose_name="Количество", help_text="Укажите количество публикаций")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.book}, {self.publisher} {self.edition}"
 
     class Meta:
@@ -226,17 +227,17 @@ class Publication(models.Model):
             )
         ]
 
-    def clean(self):
+    def clean(self) -> None:
         super().clean()
 
         validate_publication(self)
         validate_book_amount(self)
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         """
         Переопределённый метод save() для сохранения результата после валидации полей модели Publication
-        :param args:
-        :param kwargs:
+        :param args: Any
+        :param kwargs: Any
         :return: None
         """
 
