@@ -24,7 +24,7 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ["title", "genre", "is_bc_era", "publication_year", "author", "amount", "lendings"]
+        fields = ["id", "title", "genre", "is_bc_era", "publication_year", "author", "amount", "lendings"]
 
     def validate(self, data):
         values = {}
