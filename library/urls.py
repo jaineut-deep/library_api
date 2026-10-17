@@ -1,22 +1,23 @@
 from django.urls import path
+
 from .apps import LibraryConfig
 from .views import (
     AuthorCreateAPIView,
+    AuthorDestroyAPIView,
     AuthorListAPIView,
     AuthorRetrieveAPIView,
     AuthorUpdateAPIView,
-    AuthorDestroyAPIView,
     BookCreateAPIView,
+    BookDestroyAPIView,
     BookListAPIView,
     BookRetrieveAPIView,
+    BookSearchListView,
     BookUpdateAPIView,
-    BookDestroyAPIView,
     PublicationCreateAPIView,
+    PublicationDestroyAPIView,
     PublicationListAPIView,
     PublicationRetrieveAPIView,
     PublicationUpdateAPIView,
-    PublicationDestroyAPIView,
-    BookSearchListView,
 )
 
 app_name = LibraryConfig.name

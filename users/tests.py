@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
+
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
 from rest_framework.response import Response as DRFResponse
+from rest_framework.test import APIClient
+
 from library.models import Author, Book, Publication
+
 from .models import CustomUser, LendingBook
-from .serializers import LendingBookSerializer, LendingBookMemberSerializer, LendingBookStaffSerializer
+from .serializers import LendingBookMemberSerializer, LendingBookSerializer, LendingBookStaffSerializer
 
 
 class LendingTestCase(TestCase):

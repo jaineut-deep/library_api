@@ -1,12 +1,13 @@
 from django.urls import path
-from .apps import UsersConfig
 from rest_framework.routers import DefaultRouter
+
+from .apps import UsersConfig
 from .views import (
-    CustomUserListAPIView,
     CustomUserCreateAPIView,
+    CustomUserDestroyAPIView,
+    CustomUserListAPIView,
     CustomUserRetrieveAPIView,
     CustomUserUpdateAPIView,
-    CustomUserDestroyAPIView,
     LendingBookViewSet,
 )
 

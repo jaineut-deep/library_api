@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
 from config.settings import COUNT_RENEWAL
 
 
@@ -45,24 +46,16 @@ class LendingBook(models.Model):
         auto_now_add=True,
         verbose_name="Дата создания",
     )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Дата обновления"
-    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     count_renewal = models.CharField(
         choices=RENEWALS,
         blank=False,
         null=False,
         default="zero",
         verbose_name="Количество продлений",
-        help_text="Укажите номер продления"
+        help_text="Укажите номер продления",
     )
-    status = models.BooleanField(
-        default=None,
-        blank=True,
-        null=True,
-        verbose_name="Статус"
-    )
+    status = models.BooleanField(default=None, blank=True, null=True, verbose_name="Статус")
 
     def __str__(self) -> str:
         return f"{self.member} - {self.updated_at.date()}, продлений: {self.count_renewal}"

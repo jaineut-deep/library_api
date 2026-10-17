@@ -1,12 +1,13 @@
-from rest_framework import generics, filters
-from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics
+from rest_framework.permissions import IsAuthenticated
 
 from library.paginators import LibraryPaginator
 from users.permissions import IsManager
+
 from .filters import BookFilter
-from .serializers import AuthorSerializer, BookSerializer, PublicationSerializer
 from .models import Author, Book, Publication
+from .serializers import AuthorSerializer, BookSerializer, PublicationSerializer
 
 
 class AuthorCreateAPIView(generics.CreateAPIView):

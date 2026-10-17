@@ -1,14 +1,21 @@
+from typing import Any
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from library.paginators import LibraryPaginator
 from users.models import CustomUser, LendingBook
-from users.permissions import IsNotManager, IsManager, IsUserSelf
-from users.serializers import (CustomUserSerializer, RegisterSerializer, LendingBookSerializer,
-                               LendingBookMemberSerializer, LendingBookStaffSerializer)
+from users.permissions import IsManager, IsNotManager, IsUserSelf
+from users.serializers import (
+    CustomUserSerializer,
+    LendingBookMemberSerializer,
+    LendingBookSerializer,
+    LendingBookStaffSerializer,
+    RegisterSerializer,
+)
 
 
 class CustomUserListAPIView(generics.ListAPIView):
@@ -69,7 +76,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
     queryset = LendingBook.objects.all()
     pagination_class = LibraryPaginator
 
-    def get_permissions(self):
+    def get_permissions(self) -> Any:
         if self.action == "create":
             return [IsAuthenticated(), IsNotManager()]
         elif self.action == "destroy":
@@ -79,8 +86,13 @@ class LendingBookViewSet(viewsets.ModelViewSet):
 
         return super().get_permissions()
 
-    def get_serializer_class(self):
-        if self.action in ("create", "list", "retrieve", "destroy",):
+    def get_serializer_class(self) -> Any:
+        if self.action in (
+            "create",
+            "list",
+            "retrieve",
+            "destroy",
+        ):
             return LendingBookSerializer
         elif self.action in ("partial_update", "update") and self.request.user.is_staff:
             return LendingBookStaffSerializer
@@ -89,7 +101,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
 
         return super().get_serializer_class()
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         user = self.request.user
 
         if self.action in ("list", "retrieve", "partial_update", "update") and user.is_staff:
@@ -101,7 +113,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
 
         return super().get_queryset()
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request: Any, *args: Any, **kwargs: Any) -> Response:
         instance = self.get_object()
 
         if not request.user.is_staff:
@@ -110,7 +122,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer: Any) -> None:
         instance = serializer.instance
         user = self.request.user
 

@@ -1,20 +1,23 @@
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from typing import Any
 
-from .validators import (validate_day_existence, validate_day_with_month, validate_month_range, validate_book_amount,
-                         validate_birth_year, validate_publication)
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+
+from .validators import (
+    validate_birth_year,
+    validate_book_amount,
+    validate_day_existence,
+    validate_day_with_month,
+    validate_month_range,
+    validate_publication,
+)
 
 
 class Author(models.Model):
     first_name = models.CharField(max_length=25, verbose_name="Имя", help_text="Укажите имя автора")
     surname = models.CharField(max_length=35, verbose_name="Фамилия", help_text="Укажите фамилию автора")
     middle_name = models.CharField(
-        max_length=25,
-        blank=True,
-        null=True,
-        verbose_name="Отчество",
-        help_text="Укажите отчество автора"
+        max_length=25, blank=True, null=True, verbose_name="Отчество", help_text="Укажите отчество автора"
     )
     birth_day = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(31)],
@@ -67,7 +70,7 @@ class Author(models.Model):
             models.CheckConstraint(
                 condition=models.Q(birth_day__isnull=True) | models.Q(birth_month__isnull=False),
                 name="author_birth_day_requires_month",
-            )
+            ),
         ]
 
     def clean(self) -> None:
@@ -192,11 +195,7 @@ class Publication(models.Model):
         help_text="Укажите год издания",
     )
     publisher = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        verbose_name="Издательство",
-        help_text="Укажите издательство"
+        max_length=50, blank=True, null=True, verbose_name="Издательство", help_text="Укажите издательство"
     )
     publication_place = models.CharField(
         max_length=35,

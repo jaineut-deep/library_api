@@ -1,9 +1,11 @@
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
 from rest_framework.response import Response as DRFResponse
+from rest_framework.test import APIClient
+
 from users.models import CustomUser
+
 from .models import Author, Book, Publication
 from .serializers import AuthorSerializer, BookSerializer, PublicationSerializer
 
@@ -276,9 +278,7 @@ class BookTestCase(TestCase):
     def test_books_search_user(self) -> None:
         self.client.force_authenticate(user=self.user)
         url = reverse("library:book_search")
-        search_data = {
-            "author": "достоевский", "genre": "роман"
-        }
+        search_data = {"author": "достоевский", "genre": "роман"}
         response = self.client.get(url, search_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

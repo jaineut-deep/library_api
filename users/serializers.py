@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from config.settings import COUNT_RENEWAL
+
 from .models import CustomUser, LendingBook
 
 
@@ -18,14 +19,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ["username", "email", "password"]
 
-    def validate_email(self, value):
+    def validate_email(self, value: str) -> str:
         value = value.lower().strip()
 
         if CustomUser.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("Пользователь с таким email уже существует")
         return value
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> CustomUser:
         password = validated_data.pop("password")
 
         user = CustomUser(**validated_data)
@@ -49,24 +50,21 @@ class LendingBookMemberSerializer(serializers.ModelSerializer):
         fields = ["count_renewal"]
         read_only_fields = ["created_at", "updated_at", "member", "publication"]
 
-    def validate(self, data):
+    def validate(self, data: dict) -> dict:
         count_renewal_choice = data.get("count_renewal")
         count_renewal_int = COUNT_RENEWAL.get(count_renewal_choice)
 
         if self.instance is not None:
-            if ((count_renewal_int - self.instance.get_count_renewal) > 1 or
-                    count_renewal_int <= self.instance.get_count_renewal):
+            if (
+                count_renewal_int - self.instance.get_count_renewal
+            ) > 1 or count_renewal_int <= self.instance.get_count_renewal:
                 raise serializers.ValidationError(
                     {"count_renewal": "Каждое следующее продление должно быть больше на 1"}
                 )
             elif not self.instance.status:
-                raise serializers.ValidationError(
-                    {"status": "Текущая выдача не одобрена, попробуйте позже"}
-                )
+                raise serializers.ValidationError({"status": "Текущая выдача не одобрена, попробуйте позже"})
             elif self.instance.status is None:
-                raise serializers.ValidationError(
-                    {"updated_at": "Запрос на выдачу уже отправлен, обратитесь позже"}
-                )
+                raise serializers.ValidationError({"updated_at": "Запрос на выдачу уже отправлен, обратитесь позже"})
             elif self.instance.get_count_renewal == 2:
                 raise serializers.ValidationError({"count_renewal": "Достигнут предел количества продлений"})
 

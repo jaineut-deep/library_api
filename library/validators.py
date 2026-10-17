@@ -1,7 +1,9 @@
 from __future__ import annotations
-from django.utils import timezone
+
 from typing import TYPE_CHECKING
+
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 if TYPE_CHECKING:
     from .models import Author, Book, Publication
@@ -18,20 +20,29 @@ def validate_day_existence(obj: Author, astronomical_year: int) -> None:
             raise ValidationError({"birth_day": "День должен быть положительным"})
         else:
             days_in_month = [
-                31, 29 if obj.is_leap_year(astronomical_year) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+                31,
+                29 if obj.is_leap_year(astronomical_year) else 28,
+                31,
+                30,
+                31,
+                30,
+                31,
+                31,
+                30,
+                31,
+                30,
+                31,
             ]
 
             if isinstance(obj.birth_month, int):
-                if obj.birth_day is not None and not 1 <= obj.birth_day <= days_in_month[obj.birth_month -1]:
-                    raise ValidationError({
-                        "birth_day": "Такого дня нет в указанном месяце и годе"
-                    })
+                if obj.birth_day is not None and not 1 <= obj.birth_day <= days_in_month[obj.birth_month - 1]:
+                    raise ValidationError({"birth_day": "Такого дня нет в указанном месяце и годе"})
 
 
 def validate_day_with_month(obj: Author) -> None:
     if obj.birth_month is None:
-            if obj.birth_day is not None:
-                raise ValidationError({"birth_day": "Нельзя указать день без месяца."})
+        if obj.birth_day is not None:
+            raise ValidationError({"birth_day": "Нельзя указать день без месяца."})
 
 
 def validate_month_range(obj: Author) -> None:
