@@ -3,6 +3,7 @@ from typing import Any
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from .services import catalog_directory_path
 from .validators import (
     validate_birth_year,
     validate_book_amount,
@@ -10,6 +11,7 @@ from .validators import (
     validate_day_with_month,
     validate_month_range,
     validate_publication,
+    validate_negative_year_bce,
 )
 
 
@@ -71,6 +73,10 @@ class Author(models.Model):
                 condition=models.Q(birth_day__isnull=True) | models.Q(birth_month__isnull=False),
                 name="author_birth_day_requires_month",
             ),
+            models.CheckConstraint(
+                condition=models.Q(birth_year__lt=1) | models.Q(is_bc_era=False),
+                name="author_negative_birth_year_and_bce",
+            ),
         ]
 
     def clean(self) -> None:
@@ -80,6 +86,7 @@ class Author(models.Model):
         validate_day_with_month(self)
         validate_month_range(self)
         validate_birth_year(self)
+        validate_negative_year_bce(self)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -116,12 +123,19 @@ class Author(models.Model):
 
 
 class Book(models.Model):
-    title = models.CharField(max_length=200, verbose_name="Название", help_text="Укажите название книги")
+    title = models.CharField(max_length=200, verbose_name="Название", help_text="Укажите название издания")
+    category = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Категория",
+        help_text="Укажите категорию издания",
+    )
     genre = models.CharField(max_length=35, verbose_name="Жанр", help_text="Укажите название жанра")
     is_bc_era = models.BooleanField(
         default=False,
         verbose_name="До нашей эры",
-        help_text="Отметьте, если книга опубликована впервые до н. э.",
+        help_text="Отметьте, если издание опубликовано впервые до н. э.",
     )
     publication_year = models.IntegerField(
         validators=[MinValueValidator(-9998), MaxValueValidator(9999)],
@@ -133,6 +147,8 @@ class Book(models.Model):
     author = models.ForeignKey(
         to=Author,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="books",
         verbose_name="Автор",
         help_text="Выберите автора",
@@ -156,6 +172,10 @@ class Book(models.Model):
                 condition=models.Q(amount__gte=1),
                 name="book_amount_check",
             ),
+            models.CheckConstraint(
+                condition=models.Q(publication_year__lt=1) | models.Q(is_bc_era=False),
+                name="book_negative_publication_year_and_bce",
+            ),
         ]
 
     def clean(self) -> None:
@@ -163,6 +183,7 @@ class Book(models.Model):
 
         validate_publication(self)
         validate_book_amount(self)
+        validate_negative_year_bce(self)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -210,6 +231,13 @@ class Publication(models.Model):
         help_text="Выберите книгу",
     )
     quantity = models.PositiveIntegerField(verbose_name="Количество", help_text="Укажите количество публикаций")
+    file_path = models.FileField(
+        upload_to=catalog_directory_path,
+        blank=True,
+        null=True,
+        verbose_name="Хранение файла",
+        help_text="Укажите файл для загрузки",
+    )
 
     def __str__(self) -> str:
         return f"{self.book}, {self.publisher} {self.edition}"
@@ -242,3 +270,83 @@ class Publication(models.Model):
 
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class Issue(models.Model):
+    book = models.ForeignKey(
+        to=Book,
+        on_delete=models.CASCADE,
+        related_name="issues",
+        verbose_name="Издание",
+        help_text="Укажите издание",
+    )
+    issue_date = models.DateField(verbose_name="Дата выпуска", help_text="Укажите дату выпуска")
+    volume_number = models.PositiveIntegerField(verbose_name="Том", help_text="Укажите номер тома")
+    issue_number = models.PositiveIntegerField(verbose_name="Номер выпуска", help_text="Укажите номер выпуска")
+    quantity = models.PositiveIntegerField(verbose_name="Количество", help_text="Укажите количество выпусков журнала")
+    file_path = models.FileField(
+        upload_to=catalog_directory_path,
+        blank=True,
+        null=True,
+        verbose_name="Хранение файла",
+        help_text="Укажите файл для загрузки",
+    )
+
+    def __str__(self):
+        return f"{self.book} - Номер: {self.issue_number}, том {self.volume_number}"
+
+    class Meta:
+        verbose_name = "выпуск_журнала"
+        verbose_name_plural = "выпуски_журналов"
+        ordering = ["book"]
+
+    def clean(self) -> None:
+        super().clean()
+
+        validate_book_amount(self)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Переопределённый метод save() для сохранения результата после валидации полей модели Issue
+        :param args: Any
+        :param kwargs: Any
+        :return: None
+        """
+
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class Audiobook(models.Model):
+    book = models.ForeignKey(
+        to=Book,
+        on_delete=models.CASCADE,
+        related_name="audiobooks",
+        verbose_name="Издание",
+        help_text="Укажите издание",
+    )
+    narrator = models.CharField(max_length=50, verbose_name="Рассказчик", help_text="Укажите рассказчика")
+    language = models.CharField(max_length=15, blank=True, null=True, verbose_name="Язык", help_text="Укажите язык")
+    duration = models.DurationField(verbose_name="Продолжительность", help_text="Укажите продолжительность записи")
+    format = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True,
+        verbose_name="Формат",
+        help_text="Укажите формат записи"
+    )
+    file_path = models.FileField(
+        upload_to=catalog_directory_path,
+        blank=True,
+        null=True,
+        verbose_name="Хранение файла",
+        help_text="Укажите файл для загрузки",
+    )
+
+    def __str__(self):
+        return f"{self.book}: рассказчик - {self.narrator}, продолжительность - {self.duration}"
+
+    class Meta:
+        verbose_name = "аудиокнига"
+        verbose_name_plural = "аудиокниги"
+        ordering = ["book"]
