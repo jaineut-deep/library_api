@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_spectacular",
     "corsheaders",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -149,11 +150,16 @@ AUTH_USER_MODEL = "users.CustomUser"
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# mailing settings
+
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND") if DEBUG == False else os.getenv("EMAIL_BACKEND_TEST")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = True if os.getenv("EMAIL_USE_TLS") == "True" else False
+EMAIL_USE_SSL = False if os.getenv("EMAIL_USE_SSL") == "False" else True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER if DEBUG == False else os.getenv("DEFAULT_FROM_EMAIL_TEST")
 
 
 # caching settings
@@ -206,6 +212,42 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://read-and-write.example.com",
 ]
+
+
+# Настройки для Celery
+
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = (
+    f'redis://{os.getenv("REDIS_HOST", "127.0.0.1")}:{os.getenv("REDIS_PORT", "6379")}/'
+    f'{os.getenv("REDIS_DB", "0")}'
+)
+
+# URL-адрес брокера результатов
+CELERY_RESULT_BACKEND = (
+    f'redis://{os.getenv("REDIS_HOST", "127.0.0.1")}:{os.getenv("REDIS_PORT", "6379")}/'
+    f'{os.getenv("REDIS_DB", "0")}'
+)
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = "UTC"
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_BEAT_SCHEDULE = {
+    "task-name": {
+        "task": "users.tasks.block_user_after_month",
+        "schedule": timedelta(minutes=2),
+    },
+}
+
+CELERY_IMPORTS = (
+    "syllabus.tasks",
+    "users.tasks",
+)
 
 
 DATA_COUNT_RENEWAL = os.getenv("COUNT_RENEWAL")
