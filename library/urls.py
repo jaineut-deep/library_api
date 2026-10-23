@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from .apps import LibraryConfig
 from .views import (
@@ -18,9 +19,18 @@ from .views import (
     PublicationListAPIView,
     PublicationRetrieveAPIView,
     PublicationUpdateAPIView,
+    AudiobookCreateAPIView,
+    AudiobookListAPIView,
+    AudiobookRetrieveAPIView,
+    AudiobookUpdateAPIView,
+    AudiobookDestroyAPIView,
+    IssueViewSet,
 )
 
 app_name = LibraryConfig.name
+
+router = DefaultRouter()
+router.register(r"issues", IssueViewSet, basename="issue")
 
 
 urlpatterns = [
