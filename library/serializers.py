@@ -6,7 +6,7 @@ from rest_framework import serializers
 from users.models import LendingBook
 from users.serializers import LendingBookSerializer
 
-from .models import Author, Book, Publication
+from .models import Author, Book, Publication, Issue, Audiobook
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -217,3 +217,38 @@ class PublicationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"quantity": "Количество публикаций не может быть отрицательным"})
 
         return data
+
+
+class IssueSerializer(serializers.ModelSerializer):
+    book = serializers.PrimaryKeyRelatedField(queryset=Book.objects.all(), write_only=True)
+
+    class Meta:
+        model = Issue
+        fields = ["book", "issue_date", "volume_number", "issue_number", "quantity"]
+        read_only_fields = ["book"]
+
+    def validate(self, data: Any) -> Any:
+        quantity = data.get("quantity")
+
+        if quantity < 0:
+            raise serializers.ValidationError({"quantity": "Количество выпусков журнала не может быть отрицательным"})
+
+        return data
+
+
+class IssueMemberSerializer(serializers.ModelSerializer):
+    book = serializers.PrimaryKeyRelatedField(queryset=Book.objects.all(), write_only=True)
+
+    class Meta:
+        model = Issue
+        fields = ["book", "issue_date", "volume_number", "issue_number"]
+        read_only_fields = ["book"]
+
+
+class AudiobookSerializer(serializers.ModelSerializer):
+    book = serializers.PrimaryKeyRelatedField(queryset=Book.objects.all(), write_only=True)
+
+    class Meta:
+        model = Audiobook
+        fields = ["book", "narrator", "language", "duration", "format"]
+        read_only_fields = ["book"]
