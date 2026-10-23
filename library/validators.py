@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 if TYPE_CHECKING:
-    from .models import Author, Book, Publication
+    from .models import Author, Book, Publication, Issue
 
 
 def validate_birth_year(obj: Author) -> None:
@@ -51,8 +51,8 @@ def validate_month_range(obj: Author) -> None:
             raise ValidationError({"birth_month": "Месяц должен быть от 1 до 12"})
 
 
-def validate_book_amount(obj: Book | Publication) -> None:
-    from .models import Book, Publication
+def validate_book_amount(obj: Book | Publication | Issue) -> None:
+    from .models import Book, Publication, Issue
 
     if isinstance(obj, Book):
         if obj.amount < 0:
@@ -60,6 +60,9 @@ def validate_book_amount(obj: Book | Publication) -> None:
     elif isinstance(obj, Publication):
         if obj.quantity < 0:
             raise ValidationError({"quantity": "Количество публикаций не может быть отрицательным"})
+    elif isinstance(obj, Issue):
+        if obj.quantity < 0:
+            raise ValidationError({"quantity": "Количество выпусков журнала не может быть отрицательным"})
 
 
 def validate_publication(obj: Book | Publication) -> None:
@@ -75,3 +78,19 @@ def validate_publication(obj: Book | Publication) -> None:
     if isinstance(obj, Publication):
         if not (1 <= obj.edition <= timezone.now().year):
             raise ValidationError({"edition": "Год издания не может быть отрицательным или в будущем"})
+
+
+def validate_negative_year_bce(obj: Author | Book) -> None:
+    from .models import Author, Book
+
+    if isinstance(obj, Author):
+        if not (obj.birth_year < 1 or not obj.is_bc_era):
+            raise ValidationError(
+                {"birth_year": "Значение эры и года не соответствуют самой эре"}
+            )
+
+    if isinstance(obj, Book):
+        if not (obj.publication_year < 1 or not obj.is_bc_era):
+            raise ValidationError(
+                {"birth_year": "Значение эры и года не соответствуют самой эре"}
+            )
