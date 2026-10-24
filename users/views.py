@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from library.paginators import LibraryPaginator
+from users.tasks import send_update_lending_mail
 from users.models import CustomUser, LendingBook
 from users.permissions import IsManager, IsNotManager, IsUserSelf
 from users.serializers import (
@@ -113,6 +114,12 @@ class LendingBookViewSet(viewsets.ModelViewSet):
 
         return super().get_queryset()
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        send_update_lending_mail.delay(
+            instance.member.email, True, "create", instance.publication.book.title
+        )
+
     def retrieve(self, request: Any, *args: Any, **kwargs: Any) -> Response:
         instance = self.get_object()
 
@@ -129,5 +136,19 @@ class LendingBookViewSet(viewsets.ModelViewSet):
         if not user.is_staff:
             if instance.member_id != user.pk:
                 raise PermissionDenied("Недостаточно прав для обновления объекта.")
+        updated_inst = serializer.save()
+        procedure = ""
+        if instance.count_renewal == updated_inst.count_renewal:
+            if updated_inst.status is True and (updated_inst.status is not instance.status):
+                procedure = "permit"
+            elif updated_inst.status is False and (updated_inst.status is not instance.status):
+                procedure = "deny"
+            send_update_lending_mail.delay(
+                updated_inst.member.email, False, procedure, updated_inst.publication.book.title
+            )
+        elif instance.count_renewal != updated_inst.count_renewal:
             serializer.save(status=None)
-        serializer.save()
+            procedure = "renewal"
+            send_update_lending_mail.delay(
+                updated_inst.member.email, False, procedure, updated_inst.publication.book.title
+            )
