@@ -239,13 +239,12 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 CELERY_BEAT_SCHEDULE = {
     "task-name": {
-        "task": "users.tasks.block_user_after_month",
+        "task": "users.tasks.suspend_lending_member",
         "schedule": timedelta(minutes=2),
     },
 }
 
 CELERY_IMPORTS = (
-    "syllabus.tasks",
     "users.tasks",
 )
 
