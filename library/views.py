@@ -145,7 +145,7 @@ class IssueViewSet(viewsets.ModelViewSet):
         if self.action in ("create", "update", "partial_update", "destroy"):
             return [IsAuthenticated(), IsManager()]
         elif self.action in ("list", "retrieve"):
-            return [IsAuthenticated]
+            return [IsAuthenticated()]
 
         return super().get_permissions()
 
