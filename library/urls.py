@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .apps import LibraryConfig
@@ -28,12 +28,12 @@ from .views import (
 )
 
 app_name = LibraryConfig.name
-
 router = DefaultRouter()
 router.register(r"issues", IssueViewSet, basename="issue")
 
 
 urlpatterns = [
+    path("", include(router.urls)),
     path("author/create/", AuthorCreateAPIView.as_view(), name="author_create"),
     path("author/", AuthorListAPIView.as_view(), name="author_list"),
     path("author/<int:pk>/", AuthorRetrieveAPIView.as_view(), name="author_retrieve"),
@@ -49,5 +49,10 @@ urlpatterns = [
     path("publication/<int:pk>/", PublicationRetrieveAPIView.as_view(), name="publication_retrieve"),
     path("publication/update/<int:pk>/", PublicationUpdateAPIView.as_view(), name="publication_update"),
     path("publication/delete/<int:pk>/", PublicationDestroyAPIView.as_view(), name="publication_destroy"),
+    path("audiobook/create/", AudiobookCreateAPIView.as_view(), name="audiobook_create"),
+    path("audiobook/", AudiobookListAPIView.as_view(), name="audiobook_list"),
+    path("audiobook/<int:pk>/", AudiobookRetrieveAPIView.as_view(), name="audiobook_retrieve"),
+    path("audiobook/update/<int:pk>/", AudiobookUpdateAPIView.as_view(), name="audiobook_update"),
+    path("audiobook/delete/<int:pk>/", AudiobookDestroyAPIView.as_view(), name="audiobook_destroy"),
     path("books/", BookSearchListView.as_view(), name="book_search"),
 ]
