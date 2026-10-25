@@ -114,7 +114,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
 
         return super().get_queryset()
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         instance = serializer.save()
         send_update_lending_mail.delay(
             instance.member.email, True, "create", instance.publication.book.title
