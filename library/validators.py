@@ -90,7 +90,8 @@ def validate_negative_year_bce(obj: Author | Book) -> None:
             )
 
     if isinstance(obj, Book):
-        if not (obj.publication_year < 1 or not obj.is_bc_era):
-            raise ValidationError(
-                {"birth_year": "Значение эры и года не соответствуют самой эре"}
-            )
+        if obj.publication_year:
+            if not (obj.publication_year < 1 or not obj.is_bc_era):
+                raise ValidationError(
+                    {"birth_year": "Значение эры и года не соответствуют самой эре"}
+                )
