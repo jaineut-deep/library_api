@@ -249,6 +249,9 @@ CELERY_IMPORTS = (
 )
 
 
+DEFAULT_CHARSET = "utf-8"
+
+
 DATA_COUNT_RENEWAL = os.getenv("COUNT_RENEWAL")
 if DATA_COUNT_RENEWAL is None:
     raise ValueError("Нет данных")
