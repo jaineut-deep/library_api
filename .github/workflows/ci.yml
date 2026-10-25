@@ -1,0 +1,178 @@
+name: Django CI/CD Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.14.4'
+
+    - name: Cache Poetry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "export PATH=\"$HOME/.local/bin:$PATH\"" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: flake8 check
+      run: poetry run flake8 .
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      DEBUG: "True"
+      REDIS_HOST: "127.0.0.1"
+      REDIS_PORT: "6379"
+      REDIS_DB: "1"
+      SECRET_KEY: empty
+      POSTGRES_DB: mybase
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: "127.0.0.1"
+      POSTGRES_PORT: "5432"
+      COUNT_RENEWAL: ${{ secrets.COUNT_RENEWAL }}
+
+    services:
+      db:
+        image: postgres:15-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: mybase
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        env:
+          REDIS_HOST: "127.0.0.1"
+          REDIS_PORT: "6379"
+          REDIS_DB: "1"
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.14.4'
+
+    - name: Cache Poetry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "export PATH=\"$HOME/.local/bin:$PATH\"" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run migrations
+      env:
+        POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+        POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        COUNT_RENEWAL: ${{ env.COUNT_RENEWAL }}
+      run: poetry run python3 manage.py migrate
+
+    - name: Run tests
+      env:
+        REDIS_HOST: ${{ env.REDIS_HOST }}
+        REDIS_PORT: ${{ env.REDIS_PORT }}
+        REDIS_DB: ${{ env.REDIS_DB }}
+        POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+        POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        COUNT_RENEWAL: ${{ env.COUNT_RENEWAL }}
+      run: poetry run python3 manage.py test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+
+    - name: Add server to known hosts
+      env:
+        SERV_HOST: ${{ secrets.SERVER_IP }}
+      run: |
+        chmod 700 ~/.ssh
+        ssh-keyscan -H "$SERV_HOST" >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+
+    - name: Create .env on runner
+      env:
+        ENV_DATA: ${{ secrets.ENV_FILE }}
+      run: |
+        set -euo pipefail
+        printf '%s' "$ENV_DATA" | base64 -d > .env
+
+    - name: Copy project files to server
+      env:
+        SERV_HOST: ${{ secrets.SERVER_IP }}
+        SERV_USER: ${{ secrets.SSH_USER }}
+        SERV_PATH: ${{ secrets.DEPLOY_DIR }}
+        SERV_PORT: ${{ secrets.SSH_PORT }}
+      run: |
+        rsync -avz \
+        --exclude '__pycache__' \
+        --exclude '.git' \
+        --exclude '.github' \
+        --exclude '*.pyc' \
+        --exclude 'node_modules' \
+        --exclude '.gitignore' \
+        --exclude '.env.example' \
+        --exclude 'htmlcov' \
+        -e "ssh -p ${SERV_PORT}" \
+        ./ "${SERV_USER}@${SERV_HOST}:${SERV_PATH}"
+
+    - name: Start application
+      env:
+        SERV_HOST: ${{ secrets.SERVER_IP }}
+        SERV_PORT: ${{ secrets.SSH_PORT }}
+        SERV_USER: ${{ secrets.SSH_USER }}
+        SERV_PATH: ${{ secrets.DEPLOY_DIR }}
+      run: |
+        ssh -o StrictHostKeyChecking=yes \
+          -p "${SERV_PORT}" \
+          "${SERV_USER}@${SERV_HOST}" \
+          'sudo -n /usr/local/sbin/deploy-framework'
