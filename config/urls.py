@@ -32,7 +32,7 @@ urlpatterns = [
     # library_app
     path("", include("library.urls", namespace="library")),
     # users_app
-    path("users/", include((router.urls, "users"), namespace="users")),
+    path("users/", include("users.urls", namespace="users")),
     # doc_api:
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # optional_ui:

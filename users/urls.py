@@ -10,6 +10,10 @@ from .views import (
     CustomUserUpdateAPIView,
     LendingBookViewSet,
 )
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 app_name = UsersConfig.name
 router = DefaultRouter()
@@ -22,4 +26,7 @@ urlpatterns = [
     path("user/<int:pk>/", CustomUserRetrieveAPIView.as_view(), name="user_retrieve"),
     path("user/update/<int:pk>/", CustomUserUpdateAPIView.as_view(), name="user_update"),
     path("user/delete/<int:pk>/", CustomUserDestroyAPIView.as_view(), name="user_destroy"),
-]
+    # token_routes
+    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+] + router.urls
