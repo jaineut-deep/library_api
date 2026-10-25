@@ -4,15 +4,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .services import catalog_directory_path
-from .validators import (
-    validate_birth_year,
-    validate_book_amount,
-    validate_day_existence,
-    validate_day_with_month,
-    validate_month_range,
-    validate_publication,
-    validate_negative_year_bce,
-)
+from .validators import (validate_birth_year, validate_book_amount, validate_day_existence, validate_day_with_month,
+                         validate_month_range, validate_negative_year_bce, validate_publication)
 
 
 class Author(models.Model):
@@ -329,11 +322,7 @@ class Audiobook(models.Model):
     language = models.CharField(max_length=15, blank=True, null=True, verbose_name="Язык", help_text="Укажите язык")
     duration = models.DurationField(verbose_name="Продолжительность", help_text="Укажите продолжительность записи")
     format = models.CharField(
-        max_length=15,
-        blank=True,
-        null=True,
-        verbose_name="Формат",
-        help_text="Укажите формат записи"
+        max_length=15, blank=True, null=True, verbose_name="Формат", help_text="Укажите формат записи"
     )
     file_path = models.FileField(
         upload_to=catalog_directory_path,

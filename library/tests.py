@@ -1,4 +1,5 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -7,8 +8,8 @@ from rest_framework.test import APIClient
 
 from users.models import CustomUser
 
-from .models import Author, Book, Publication, Issue, Audiobook
-from .serializers import AuthorSerializer, BookSerializer, PublicationSerializer, IssueSerializer, AudiobookSerializer
+from .models import Audiobook, Author, Book, Issue, Publication
+from .serializers import AudiobookSerializer, AuthorSerializer, BookSerializer, IssueSerializer, PublicationSerializer
 
 
 class BookTestCase(TestCase):
@@ -76,9 +77,7 @@ class BookTestCase(TestCase):
             quantity=4,
         )
         self.audiobook_one = Audiobook.objects.create(
-            book=self.book_two,
-            narrator="Машков, В.",
-            duration=timedelta(hours=1, minutes=35, seconds=13)
+            book=self.book_two, narrator="Машков, В.", duration=timedelta(hours=1, minutes=35, seconds=13)
         )
 
         self.client: APIClient = APIClient()

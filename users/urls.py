@@ -1,19 +1,10 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .apps import UsersConfig
-from .views import (
-    CustomUserCreateAPIView,
-    CustomUserDestroyAPIView,
-    CustomUserListAPIView,
-    CustomUserRetrieveAPIView,
-    CustomUserUpdateAPIView,
-    LendingBookViewSet,
-)
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from .views import (CustomUserCreateAPIView, CustomUserDestroyAPIView, CustomUserListAPIView,
+                    CustomUserRetrieveAPIView, CustomUserUpdateAPIView, LendingBookViewSet)
 
 app_name = UsersConfig.name
 router = DefaultRouter()

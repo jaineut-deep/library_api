@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 if TYPE_CHECKING:
-    from .models import Author, Book, Publication, Issue
+    from .models import Author, Book, Issue, Publication
 
 
 def validate_birth_year(obj: Author) -> None:
@@ -52,7 +52,7 @@ def validate_month_range(obj: Author) -> None:
 
 
 def validate_book_amount(obj: Book | Publication | Issue) -> None:
-    from .models import Book, Publication, Issue
+    from .models import Book, Issue, Publication
 
     if isinstance(obj, Book):
         if obj.amount < 0:
@@ -85,13 +85,9 @@ def validate_negative_year_bce(obj: Author | Book) -> None:
 
     if isinstance(obj, Author):
         if not (obj.birth_year < 1 or not obj.is_bc_era):
-            raise ValidationError(
-                {"birth_year": "Значение эры и года не соответствуют самой эре"}
-            )
+            raise ValidationError({"birth_year": "Значение эры и года не соответствуют самой эре"})
 
     if isinstance(obj, Book):
         if obj.publication_year:
             if not (obj.publication_year < 1 or not obj.is_bc_era):
-                raise ValidationError(
-                    {"birth_year": "Значение эры и года не соответствуют самой эре"}
-                )
+                raise ValidationError({"birth_year": "Значение эры и года не соответствуют самой эре"})

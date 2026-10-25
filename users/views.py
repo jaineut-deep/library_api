@@ -7,16 +7,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from library.paginators import LibraryPaginator
-from users.tasks import send_update_lending_mail
 from users.models import CustomUser, LendingBook
 from users.permissions import IsManager, IsNotManager, IsUserSelf
-from users.serializers import (
-    CustomUserSerializer,
-    LendingBookMemberSerializer,
-    LendingBookSerializer,
-    LendingBookStaffSerializer,
-    RegisterSerializer,
-)
+from users.serializers import (CustomUserSerializer, LendingBookMemberSerializer, LendingBookSerializer,
+                               LendingBookStaffSerializer, RegisterSerializer)
+from users.tasks import send_update_lending_mail
 
 
 class CustomUserListAPIView(generics.ListAPIView):
@@ -116,9 +111,7 @@ class LendingBookViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer: Any) -> None:
         instance = serializer.save()
-        send_update_lending_mail.delay(
-            instance.member.email, True, "create", instance.publication.book.title
-        )
+        send_update_lending_mail.delay(instance.member.email, True, "create", instance.publication.book.title)
 
     def retrieve(self, request: Any, *args: Any, **kwargs: Any) -> Response:
         instance = self.get_object()

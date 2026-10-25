@@ -1,16 +1,17 @@
+from typing import Any
+
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, generics, viewsets
 from rest_framework.permissions import IsAuthenticated
-from typing import Any
 
 from library.paginators import LibraryPaginator
 from users.permissions import IsManager
 
 from .filters import BookFilter
-from .models import Author, Book, Publication, Issue, Audiobook
-from .serializers import (AuthorSerializer, BookSerializer, PublicationSerializer, IssueSerializer,
-                          IssueMemberSerializer, AudiobookSerializer)
+from .models import Audiobook, Author, Book, Issue, Publication
+from .serializers import (AudiobookSerializer, AuthorSerializer, BookSerializer, IssueMemberSerializer,
+                          IssueSerializer, PublicationSerializer)
 
 
 class BookSearchListView(generics.ListAPIView):

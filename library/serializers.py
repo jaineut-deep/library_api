@@ -6,7 +6,7 @@ from rest_framework import serializers
 from users.models import LendingBook
 from users.serializers import LendingBookSerializer
 
-from .models import Author, Book, Publication, Issue, Audiobook
+from .models import Audiobook, Author, Book, Issue, Publication
 
 
 class BookSerializer(serializers.ModelSerializer):

@@ -244,9 +244,7 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-CELERY_IMPORTS = (
-    "users.tasks",
-)
+CELERY_IMPORTS = ("users.tasks",)
 
 
 DEFAULT_CHARSET = "utf-8"

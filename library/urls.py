@@ -1,31 +1,13 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .apps import LibraryConfig
-from .views import (
-    AuthorCreateAPIView,
-    AuthorDestroyAPIView,
-    AuthorListAPIView,
-    AuthorRetrieveAPIView,
-    AuthorUpdateAPIView,
-    BookCreateAPIView,
-    BookDestroyAPIView,
-    BookListAPIView,
-    BookRetrieveAPIView,
-    BookSearchListView,
-    BookUpdateAPIView,
-    PublicationCreateAPIView,
-    PublicationDestroyAPIView,
-    PublicationListAPIView,
-    PublicationRetrieveAPIView,
-    PublicationUpdateAPIView,
-    AudiobookCreateAPIView,
-    AudiobookListAPIView,
-    AudiobookRetrieveAPIView,
-    AudiobookUpdateAPIView,
-    AudiobookDestroyAPIView,
-    IssueViewSet,
-)
+from .views import (AudiobookCreateAPIView, AudiobookDestroyAPIView, AudiobookListAPIView, AudiobookRetrieveAPIView,
+                    AudiobookUpdateAPIView, AuthorCreateAPIView, AuthorDestroyAPIView, AuthorListAPIView,
+                    AuthorRetrieveAPIView, AuthorUpdateAPIView, BookCreateAPIView, BookDestroyAPIView, BookListAPIView,
+                    BookRetrieveAPIView, BookSearchListView, BookUpdateAPIView, IssueViewSet, PublicationCreateAPIView,
+                    PublicationDestroyAPIView, PublicationListAPIView, PublicationRetrieveAPIView,
+                    PublicationUpdateAPIView)
 
 app_name = LibraryConfig.name
 router = DefaultRouter()
