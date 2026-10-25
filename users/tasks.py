@@ -28,10 +28,12 @@ def send_update_lending_mail(member_email: str, is_created: bool, procedure: str
             message_text = f"Уважаемый читатель, по вашему запросу, вам продлена выдача книги {book} по абонементу"
         elif procedure == "deny":
             subject_text = "Продление выдачи книги по абонементу"
-            message_text = f"Уважаемый читатель, к сожалению, на данный момент, в продлении выдачи книги {book} вам отказано"
+            message_text = (f"Уважаемый читатель, к сожалению, на данный момент, "
+                            f"в продлении выдачи книги {book} вам отказано")
         elif procedure == "renewal":
             subject_text = "Поступление запроса на продление выдачи книги"
-            message_text = f"Уважаемый регистратор, поступил заказ на продление выдачи книги {book} от читателя {member_email}"
+            message_text = (f"Уважаемый регистратор, поступил заказ на продление выдачи книги "
+                            f"{book} от читателя {member_email}")
             users_emails = [DEFAULT_FROM_EMAIL]
         send_mail(
             subject=subject_text,

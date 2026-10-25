@@ -152,14 +152,14 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 # mailing settings
 
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND") if DEBUG == False else os.getenv("EMAIL_BACKEND_TEST")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND") if not DEBUG else os.getenv("EMAIL_BACKEND_TEST")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = os.getenv("EMAIL_PORT")
 EMAIL_USE_TLS = True if os.getenv("EMAIL_USE_TLS") == "True" else False
 EMAIL_USE_SSL = False if os.getenv("EMAIL_USE_SSL") == "False" else True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER if DEBUG == False else os.getenv("DEFAULT_FROM_EMAIL_TEST")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER if not DEBUG else os.getenv("DEFAULT_FROM_EMAIL_TEST")
 
 
 # caching settings
