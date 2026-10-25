@@ -292,7 +292,7 @@ class Issue(models.Model):
         help_text="Укажите файл для загрузки",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.book} - Номер: {self.issue_number}, том {self.volume_number}"
 
     class Meta:
@@ -343,7 +343,7 @@ class Audiobook(models.Model):
         help_text="Укажите файл для загрузки",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.book}: рассказчик - {self.narrator}, продолжительность - {self.duration}"
 
     class Meta:
