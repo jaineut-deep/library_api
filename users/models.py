@@ -1,8 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from config.settings import COUNT_RENEWAL
+
 
 class CustomUser(AbstractUser):
+    """Кастомный класс для представления пользователей библиотеки"""
+
     email = models.EmailField(unique=True, verbose_name="Email", help_text="Укажите свой email")
     phone_number = models.CharField(
         max_length=15, blank=True, null=True, verbose_name="Номер телефона", help_text="Укажите свой номер телефона"
@@ -15,5 +19,60 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.email
+
+
+class LendingBook(models.Model):
+    """Класс для представления выдачи книги читателям"""
+
+    RENEWALS = [(key, key.upper()) for key in COUNT_RENEWAL]
+
+    publication = models.ForeignKey(
+        to="library.Publication",
+        on_delete=models.CASCADE,
+        related_name="lendings",
+        verbose_name="Публикация",
+        help_text="Укажите публикацию книги",
+    )
+    member = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.CASCADE,
+        related_name="lendings",
+        verbose_name="Читатель",
+        help_text="Укажите читателя выдачи",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
+    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    count_renewal = models.CharField(
+        choices=RENEWALS,
+        blank=False,
+        null=False,
+        default="zero",
+        verbose_name="Количество продлений",
+        help_text="Укажите номер продления",
+    )
+    status = models.BooleanField(default=None, blank=True, null=True, verbose_name="Статус")
+
+    def __str__(self) -> str:
+        return f"{self.member} - {self.updated_at.date()}, продлений: {self.count_renewal}"
+
+    @property
+    def get_count_renewal(self) -> int:
+        """
+        Геттер, который возвращает значение номера выдачи
+        :return: int
+        """
+
+        count_data = COUNT_RENEWAL.get(self.count_renewal)
+        if not isinstance(count_data, int):
+            raise ValueError("Значение номера продления не передано")
+        return count_data
+
+    class Meta:
+        verbose_name = "выдача_книги"
+        verbose_name_plural = "выдача_книг"
+        ordering = ["count_renewal"]

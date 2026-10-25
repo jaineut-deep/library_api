@@ -16,8 +16,26 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
+
+from users.views import LendingBookViewSet
+
+router = DefaultRouter()
+router.register("lendings", LendingBookViewSet, basename="lending")
+
 
 urlpatterns = [
+    # admin_app
     path("admin/", admin.site.urls),
+    # library_app
+    path("", include("library.urls", namespace="library")),
+    # users_app
+    path("users/", include("users.urls", namespace="users")),
+    # doc_api:
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    # optional_ui:
+    path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]

@@ -10,11 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import json
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
 from pathlib import Path
 
+from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
@@ -50,7 +51,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_spectacular",
     "corsheaders",
-
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -135,9 +136,9 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATICFILES_DIRS = [BASE_DIR / "staticfiles"]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "/media/"
 
@@ -149,11 +150,16 @@ AUTH_USER_MODEL = "users.CustomUser"
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# mailing settings
+
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND") if not DEBUG else os.getenv("EMAIL_BACKEND_TEST")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = True if os.getenv("EMAIL_USE_TLS") == "True" else False
+EMAIL_USE_SSL = False if os.getenv("EMAIL_USE_SSL") == "False" else True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER if not DEBUG else os.getenv("DEFAULT_FROM_EMAIL_TEST")
 
 
 # caching settings
@@ -208,3 +214,43 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
+# Настройки для Celery
+
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = (
+    f'redis://{os.getenv("REDIS_HOST", "127.0.0.1")}:{os.getenv("REDIS_PORT", "6379")}/'
+    f'{os.getenv("REDIS_DB", "0")}'
+)
+
+# URL-адрес брокера результатов
+CELERY_RESULT_BACKEND = (
+    f'redis://{os.getenv("REDIS_HOST", "127.0.0.1")}:{os.getenv("REDIS_PORT", "6379")}/'
+    f'{os.getenv("REDIS_DB", "0")}'
+)
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = "UTC"
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_BEAT_SCHEDULE = {
+    "task-name": {
+        "task": "users.tasks.suspend_lending_member",
+        "schedule": timedelta(minutes=2),
+    },
+}
+
+CELERY_IMPORTS = ("users.tasks",)
+
+
+DEFAULT_CHARSET = "utf-8"
+
+
+DATA_COUNT_RENEWAL = os.getenv("COUNT_RENEWAL")
+if DATA_COUNT_RENEWAL is None:
+    raise ValueError("Нет данных")
+COUNT_RENEWAL = json.loads(DATA_COUNT_RENEWAL)
